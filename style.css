@@ -1,0 +1,273 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Malgun Gothic', '맑은 고딕', 'NanumGothic', Arial, sans-serif;
+    overflow: hidden;
+    user-select: none;
+}
+
+#app {
+    position: relative;
+    width: 800px;
+    height: 600px;
+    box-shadow: 0 0 40px rgba(0,100,255,0.3);
+}
+
+#gameCanvas {
+    display: block;
+    width: 800px;
+    height: 600px;
+}
+
+/* ───── Overlays ───── */
+.overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 15, 0.93);
+    z-index: 10;
+}
+
+.hidden { display: none !important; }
+
+/* ───── Title Screen ───── */
+.title-content {
+    text-align: center;
+    color: #fff;
+}
+
+.title-content h1 {
+    font-size: 2.4rem;
+    color: #FFD700;
+    text-shadow: 0 0 20px #FF8C00, 0 0 40px #FF4500;
+    margin-bottom: 6px;
+    animation: titleGlow 2s ease-in-out infinite alternate;
+}
+
+.title-content h2 {
+    font-size: 1.15rem;
+    color: #aaa;
+    margin-bottom: 22px;
+}
+
+@keyframes titleGlow {
+    from { text-shadow: 0 0 10px #FF8C00; }
+    to   { text-shadow: 0 0 30px #FF8C00, 0 0 60px #FF4500; }
+}
+
+#carSelection {
+    display: flex;
+    gap: 18px;
+    justify-content: center;
+    margin-bottom: 22px;
+}
+
+.car-option {
+    cursor: pointer;
+    padding: 14px 18px;
+    border: 2px solid #333;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.04);
+    transition: all 0.25s ease;
+}
+
+.car-option:hover {
+    border-color: #FFD700;
+    background: rgba(255,215,0,0.12);
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 8px 24px rgba(255,200,0,0.2);
+}
+
+.car-name {
+    font-size: 1.05rem;
+    font-weight: bold;
+    color: #FFD700;
+    margin-top: 8px;
+}
+
+.car-desc {
+    font-size: 0.75rem;
+    color: #888;
+    margin-top: 3px;
+}
+
+.controls-info {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 12px 24px;
+    color: #bbb;
+    display: inline-block;
+}
+
+.ctrl-title {
+    color: #FFD700;
+    font-weight: bold;
+    margin-bottom: 6px;
+    font-size: 0.95rem;
+}
+
+.controls-info p { margin: 3px 0; font-size: 0.85rem; }
+
+/* ───── HUD ───── */
+#hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 14px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+    color: #fff;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.hud-item { font-size: 0.95rem; margin: 2px 0; }
+.hud-item span { color: #FFD700; font-weight: bold; }
+
+#hud-center { text-align: center; }
+
+#stageAnimalInfo {
+    font-size: 0.85rem;
+    color: #ddd;
+    margin-bottom: 3px;
+}
+
+#killProgressBar {
+    width: 140px;
+    height: 6px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 3px;
+    margin: 0 auto 2px;
+}
+
+#killProgressFill {
+    height: 100%;
+    background: linear-gradient(to right, #2ecc71, #f1c40f);
+    border-radius: 3px;
+    width: 0%;
+    transition: width 0.2s;
+}
+
+#killProgressText {
+    font-size: 0.75rem;
+    color: #aaa;
+}
+
+/* ───── Pause ───── */
+.pause-content {
+    text-align: center;
+    color: #fff;
+}
+
+.pause-content h2 {
+    font-size: 1.8rem;
+    color: #FFD700;
+    margin-bottom: 12px;
+}
+
+/* ───── Stage Clear ───── */
+.clear-content {
+    text-align: center;
+    color: #fff;
+    animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.clear-content h2 {
+    font-size: 2rem;
+    color: #FFD700;
+    margin-bottom: 14px;
+}
+
+#clearAnimalInfo { font-size: 1.3rem; margin-bottom: 8px; }
+#clearScoreInfo  { color: #aaa; font-size: 0.95rem; margin-bottom: 14px; }
+
+.next-hint {
+    color: #666;
+    font-size: 0.85rem;
+    animation: blink 1.2s ease-in-out infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.2; }
+}
+
+@keyframes popIn {
+    from { transform: scale(0.3); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+}
+
+/* ───── Game Over ───── */
+.gameover-content {
+    text-align: center;
+    color: #fff;
+    animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.gameover-content h2 {
+    font-size: 2rem;
+    color: #e74c3c;
+    text-shadow: 0 0 20px #ff0000;
+    margin-bottom: 16px;
+}
+
+#goStageInfo { color: #aaa; font-size: 0.95rem; margin-bottom: 4px; }
+#goScoreInfo { color: #FFD700; font-size: 1.3rem; margin-bottom: 22px; }
+
+/* ───── Victory ───── */
+.victory-content {
+    text-align: center;
+    color: #fff;
+    animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.victory-content h2 {
+    font-size: 2rem;
+    color: #FFD700;
+    text-shadow: 0 0 20px #FFD700;
+    margin-bottom: 10px;
+    animation: titleGlow 1s ease-in-out infinite alternate;
+}
+
+.victory-content p { color: #aaa; margin-bottom: 8px; font-size: 0.95rem; }
+
+#victoryScoreInfo { color: #FFD700; font-size: 1.3rem; margin-bottom: 22px; }
+
+/* ───── Buttons ───── */
+button {
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+    color: #fff;
+    border: none;
+    padding: 11px 28px;
+    font-size: 0.95rem;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 6px;
+    transition: all 0.2s;
+    font-family: inherit;
+    letter-spacing: 0.5px;
+}
+
+button:hover {
+    background: linear-gradient(135deg, #f1c40f, #f39c12);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(243,156,18,0.4);
+}
+
+button:active { transform: translateY(0); }

@@ -1,0 +1,19 @@
+# PyInstaller 빌드 산출물
+dist/
+build/
+*.spec
+__pycache__/
+*.pyc
+*.pyo
+
+# 가상환경
+.venv/
+venv/
+env/
+
+# 시스템 파일
+Thumbs.db
+desktop.ini
+.DS_Store
+*.tmp
+~$*

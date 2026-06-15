@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>동물 슈팅 게임</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Title / Car Selection Screen -->
+        <div id="titleScreen" class="overlay">
+            <div class="title-content">
+                <h1>🚗 동물 슈팅 게임 🐾</h1>
+                <h2>차량을 선택하세요!</h2>
+                <div id="carSelection">
+                    <div class="car-option" onclick="selectCar('sports')">
+                        <canvas id="previewSports" width="100" height="150"></canvas>
+                        <div class="car-name">스포츠카</div>
+                        <div class="car-desc">속도 ★★★  화력 ★★</div>
+                    </div>
+                    <div class="car-option" onclick="selectCar('truck')">
+                        <canvas id="previewTruck" width="100" height="150"></canvas>
+                        <div class="car-name">트럭</div>
+                        <div class="car-desc">속도 ★  화력 ★★★★</div>
+                    </div>
+                    <div class="car-option" onclick="selectCar('convertible')">
+                        <canvas id="previewConvertible" width="100" height="150"></canvas>
+                        <div class="car-name">오픈카</div>
+                        <div class="car-desc">속도 ★★  화력 ★★★</div>
+                    </div>
+                </div>
+                <div class="controls-info">
+                    <p class="ctrl-title">🎮 조작 방법</p>
+                    <p>방향키 / WASD : 이동</p>
+                    <p>스페이스바 / Z : 발사 (자동 발사 지원)</p>
+                    <p>P : 일시정지</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- HUD -->
+        <div id="hud" class="hidden">
+            <div id="hud-left">
+                <div class="hud-item">단계: <span id="stageDisplay">1</span></div>
+                <div class="hud-item">점수: <span id="scoreDisplay">0</span></div>
+            </div>
+            <div id="hud-center">
+                <div id="stageAnimalInfo"></div>
+                <div id="killProgressBar">
+                    <div id="killProgressFill"></div>
+                </div>
+                <div id="killProgressText"></div>
+            </div>
+            <div id="hud-right">
+                <div class="hud-item" id="livesDisplay">❤️❤️❤️</div>
+            </div>
+        </div>
+
+        <!-- Pause Screen -->
+        <div id="pauseScreen" class="overlay hidden">
+            <div class="pause-content">
+                <h2>⏸ 일시정지</h2>
+                <p>P 키를 눌러 계속하세요</p>
+            </div>
+        </div>
+
+        <!-- Stage Clear Screen -->
+        <div id="stageClearScreen" class="overlay hidden">
+            <div class="clear-content">
+                <h2>🎉 단계 클리어!</h2>
+                <div id="clearAnimalInfo"></div>
+                <div id="clearScoreInfo"></div>
+                <div class="next-hint">잠시 후 다음 단계 시작...</div>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameOverScreen" class="overlay hidden">
+            <div class="gameover-content">
+                <h2>💥 게임 오버</h2>
+                <div id="goStageInfo"></div>
+                <div id="goScoreInfo"></div>
+                <button onclick="restartGame()">다시 시작</button>
+                <button onclick="goToTitle()">차량 선택</button>
+            </div>
+        </div>
+
+        <!-- Victory Screen -->
+        <div id="victoryScreen" class="overlay hidden">
+            <div class="victory-content">
+                <h2>🏆 전체 클리어! 🏆</h2>
+                <p>12마리 동물을 모두 물리쳤습니다!</p>
+                <div id="victoryScoreInfo"></div>
+                <button onclick="restartGame()">다시 시작</button>
+                <button onclick="goToTitle()">차량 선택</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
