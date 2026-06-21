@@ -42,13 +42,17 @@ let lives      = 3;
 let carType    = 'sports';
 let carColor   = CAR_COLORS[0];
 
-let player, enemies, playerBullets, particles;
-let roadOffset  = 0;
-let spawnTimer  = 0;
-let killCount   = 0;
-let killsNeeded = 0;
-let frame       = 0;
-const keys      = {};
+let player, enemies, playerBullets, particles, bombItems, bombExplosions;
+let roadOffset     = 0;
+let spawnTimer     = 0;
+let bombSpawnTimer = 0;
+let bombsToSpawn   = 0;
+let bombsSpawned   = 0;
+let killCount      = 0;
+let killsNeeded    = 0;
+let frame          = 0;
+const keys         = {};
+const BOMB_RADIUS  = 180;
 
 // ─────────────────────────────────────────
 //  Init
@@ -63,6 +67,7 @@ window.onload = () => {
         keys[e.code] = true;
         if (e.code === 'Space') e.preventDefault();
         if (e.code === 'KeyP') togglePause();
+        if (e.code === 'KeyB' && state === 'playing' && !e.repeat) useBomb();
     });
     document.addEventListener('keyup', e => { keys[e.code] = false; });
 
@@ -334,6 +339,7 @@ function startGame() {
     score = 0;
     stage = 1;
     lives = 3;
+    player = null;
     initStage();
     show('hud');
     hide('titleScreen','stageClearScreen','gameOverScreen','victoryScreen');
@@ -341,17 +347,27 @@ function startGame() {
     updateHUD();
 }
 
+function bombsForStage(s) {
+    return Math.ceil(s / 2);   // 1–2단계: 1개 … 11–12단계: 6개
+}
+
 function initStage() {
-    enemies       = [];
-    playerBullets = [];
-    particles     = [];
-    roadOffset    = 0;
-    spawnTimer    = 0;
-    killCount     = 0;
-    killsNeeded   = stage * 5 + 5;   // 10, 15, 20 … 65
-    frame         = 0;
+    enemies        = [];
+    playerBullets  = [];
+    particles      = [];
+    bombItems      = [];
+    bombExplosions = [];
+    roadOffset     = 0;
+    spawnTimer     = 0;
+    bombSpawnTimer = 0;
+    bombsToSpawn   = bombsForStage(stage);
+    bombsSpawned   = 0;
+    killCount      = 0;
+    killsNeeded    = stage * 5 + 5;   // 10, 15, 20 … 65
+    frame          = 0;
 
     const stats = CAR_STATS[carType];
+    const prevBombs = player?.bombs ?? 0;
     player = {
         x: W / 2, y: H - 85,
         w: carType === 'truck' ? 50 : 38,
@@ -361,7 +377,10 @@ function initStage() {
         bulletSpd: stats.bulletSpd,
         cool: 0,
         inv:  0,    // invincibility frames
+        bombs: prevBombs,
     };
+
+    if (bombsToSpawn > 0) spawnBombItem();
 }
 
 function restartGame() {
@@ -398,6 +417,38 @@ function togglePause() {
 // ─────────────────────────────────────────
 //  Spawning
 // ─────────────────────────────────────────
+function spawnBombItem() {
+    if (bombsSpawned >= bombsToSpawn) return;
+    bombsSpawned++;
+    bombItems.push({
+        x: 100 + Math.random() * (W - 200),
+        y: -30,
+        size: 28,
+        spd: 0.65,
+        pulse: 0,
+    });
+}
+
+function useBomb() {
+    if (!player || player.bombs <= 0) return;
+    player.bombs--;
+
+    bombExplosions.push({ x: player.x, y: player.y, r: 0, maxR: BOMB_RADIUS, life: 1 });
+    explode(player.x, player.y, 55, ['#ff0', '#f80', '#f40', '#fff', '#f60', '#fa0']);
+
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        const e = enemies[i];
+        const dx = e.x - player.x, dy = e.y - player.y;
+        if (dx * dx + dy * dy <= BOMB_RADIUS * BOMB_RADIUS) {
+            explode(e.x, e.y, 22 + e.zi * 2, ['#ff0', '#f80', '#f40', '#fff', '#ff6']);
+            score += (e.zi + 1) * 100;
+            killCount++;
+            enemies.splice(i, 1);
+        }
+    }
+    updateHUD();
+}
+
 function spawnEnemy() {
     // 60 % current stage's animal, 40 % random from previous
     let zi;
@@ -483,6 +534,40 @@ function update() {
         spawnEnemy();
         if (stage >= 4) spawnEnemy();
         if (stage >= 8) spawnEnemy();
+    }
+
+    // ── bomb item spawn (첫 개는 initStage에서 즉시, 나머지는 간격 배치) ──
+    if (bombsSpawned < bombsToSpawn) {
+        bombSpawnTimer++;
+        const remaining = bombsToSpawn - bombsSpawned;
+        const bombInterval = Math.max(240, Math.floor((killsNeeded * interval * 1.6) / remaining));
+        if (bombSpawnTimer >= bombInterval) {
+            bombSpawnTimer = 0;
+            spawnBombItem();
+        }
+    }
+
+    // ── bomb items ──
+    for (let i = bombItems.length - 1; i >= 0; i--) {
+        const item = bombItems[i];
+        item.y += item.spd;
+        item.pulse += 0.12;
+        if (item.y > H + item.size) { bombItems.splice(i, 1); continue; }
+
+        if (circleRect(item.x, item.y, item.size * 0.45, player.x, player.y, player.w, player.h)) {
+            player.bombs++;
+            explode(item.x, item.y, 12, ['#ff0', '#f80', '#fff']);
+            bombItems.splice(i, 1);
+            updateHUD();
+        }
+    }
+
+    // ── bomb explosions ──
+    for (let i = bombExplosions.length - 1; i >= 0; i--) {
+        const ex = bombExplosions[i];
+        ex.r += BOMB_RADIUS / 18;
+        ex.life -= 0.055;
+        if (ex.life <= 0) bombExplosions.splice(i, 1);
     }
 
     // ── update enemies ──
@@ -623,6 +708,9 @@ function updateHUD() {
     const hearts = '❤️'.repeat(Math.max(0,lives)) + '🖤'.repeat(Math.max(0,3-lives));
     document.getElementById('livesDisplay').textContent = hearts;
 
+    const bombs = player?.bombs ?? 0;
+    document.getElementById('bombDisplay').textContent = `폭탄 × ${bombs}`;
+
     const z = ZODIAC[stage - 1];
     document.getElementById('stageAnimalInfo').textContent = `${z.name} ${z.emoji}  체력 ${z.hp}  |  처치: ${killCount}/${killsNeeded}`;
 
@@ -654,8 +742,14 @@ function draw() {
         ctx.restore();
     }
 
+    // bomb explosions
+    for (const ex of bombExplosions) drawBombExplosion(ex);
+
     // enemies
     for (const e of enemies) drawEnemy(e);
+
+    // bomb items
+    for (const item of bombItems) drawBombItem(item);
 
     // bullets
     for (const b of playerBullets) drawBullet(b);
@@ -750,6 +844,80 @@ function drawEnemy(e) {
         ctx.fillText(`${e.hp}/${e.maxHp}`, 0, by + bh/2);
     }
 
+    ctx.restore();
+}
+
+function drawBombItem(item) {
+    ctx.save();
+    ctx.translate(item.x, item.y);
+    const pulse = 0.5 + Math.sin(item.pulse) * 0.5;
+    const r = item.size * 0.44;
+
+    ctx.strokeStyle = `rgba(255, 50, 50, ${0.4 + pulse * 0.5})`;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, r + 12 + pulse * 5, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.shadowColor = '#ff2222';
+    ctx.shadowBlur = 18 + pulse * 10;
+
+    ctx.strokeStyle = '#6b3410';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(0, -r + 2);
+    ctx.quadraticCurveTo(7, -r - 12, 12, -r - 18);
+    ctx.stroke();
+
+    ctx.fillStyle = '#ffcc00';
+    ctx.beginPath();
+    ctx.arc(12, -r - 18, 3 + pulse * 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    const body = ctx.createRadialGradient(-r * 0.3, -r * 0.35, 0, 0, 0, r);
+    body.addColorStop(0, '#ff7777');
+    body.addColorStop(0.55, '#ee1111');
+    body.addColorStop(1, '#990000');
+    ctx.fillStyle = body;
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#cc0000';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.beginPath();
+    ctx.ellipse(-r * 0.28, -r * 0.28, r * 0.24, r * 0.14, -0.6, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${Math.floor(r * 0.95)}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('B', 0, 1);
+
+    ctx.restore();
+}
+
+function drawBombExplosion(ex) {
+    ctx.save();
+    ctx.globalAlpha = ex.life * 0.55;
+    const g = ctx.createRadialGradient(ex.x, ex.y, ex.r * 0.2, ex.x, ex.y, ex.r);
+    g.addColorStop(0, 'rgba(255,255,200,0.9)');
+    g.addColorStop(0.45, 'rgba(255,120,0,0.6)');
+    g.addColorStop(1, 'rgba(255,40,0,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(ex.x, ex.y, ex.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = `rgba(255,220,100,${ex.life * 0.7})`;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(ex.x, ex.y, ex.r * 0.85, 0, Math.PI * 2);
+    ctx.stroke();
     ctx.restore();
 }
 

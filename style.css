@@ -139,6 +139,12 @@ body {
 .hud-item { font-size: 0.95rem; margin: 2px 0; }
 .hud-item span { color: #FFD700; font-weight: bold; }
 
+#bombDisplay {
+    color: #ff3333;
+    font-weight: bold;
+    text-shadow: 0 0 8px rgba(255, 40, 40, 0.85);
+}
+
 #hud-center { text-align: center; }
 
 #stageAnimalInfo {
